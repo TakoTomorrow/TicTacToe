@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 /// Run App
@@ -61,38 +62,74 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Regist Player'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Center(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              width: 200,
+              child: Center(
                 child: TextField(
-              controller: state.player1Controller,
-            )),
-          ),
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Center(
+                  decoration: const InputDecoration(
+                    hintText: 'Enter Play1 Name',
+                  ),
+                  controller: state.player1Controller,                  
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(20),
+              width: 200,
+              child: Center(
                 child: TextField(
-              controller: state.player2Controller,
-            )),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (state.player1Controller.text == '') return;
-              if (state.player2Controller.text == '') return;
+                  decoration: const InputDecoration(
+                    hintText: 'Enter Play2 Name',
+                  ),
+                  controller: state.player2Controller,
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 50,
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (state.player1Controller.text == '') {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return const AlertDialog(
+                          content: Text('Player1 is null!'),
+                        );
+                      });
+                  
+                  return;
+                }
+                if (state.player2Controller.text == '') {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return const AlertDialog(
+                          content: Text('Player2 is null!'),
+                        );
+                      });
 
-              var players = {
-                'player1': state.player1Controller.text,
-                'player2': state.player2Controller.text,
-              };
+                  return;
+                }
 
-              Navigator.of(context).pushNamed('/tictactoe', arguments: players);
-            },
-            child: const Text('Start Game'),
-          )
-        ],
+                var players = {
+                  'player1': state.player1Controller.text,
+                  'player2': state.player2Controller.text,
+                };
+
+                Navigator.of(context)
+                    .pushNamed('/tictactoe', arguments: players);
+              },
+              child: const Text('Start Game'),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -112,7 +149,7 @@ class TicTacToePage extends StatefulWidget {
       required this.player2});
 
   @override
-  State<TicTacToePage> createState() => _TicTacToePageState();
+  _TicTacToePageState createState() => _TicTacToePageState();
 }
 
 class _TicTacToePageState extends State<TicTacToePage> {
@@ -126,7 +163,7 @@ class _TicTacToePageState extends State<TicTacToePage> {
 
   String get lastButtonId {
     return _clickTrace.last;
-  }
+  } 
 
   @override
   Widget build(BuildContext context) {
@@ -164,22 +201,22 @@ class _TicTacToePageState extends State<TicTacToePage> {
 
   void _clickGameButton(GameButton thisButton) {
     setState(() {
-      var currentPlayer = nextPlayer;
+      var currentPlayer = nextPlayer ?? widget.player1;
 
       if (thisButton.id == lastButtonId && !haveRepent) {
         thisButton.enabled = false;
         thisButton.symbol = Symbols.noneplay;
         haveRepent = true;
-        nextPlayer = currentPlayer?.name == widget.player1.name
+        nextPlayer = currentPlayer.name == widget.player1.name
             ? widget.player2
             : widget.player1;
         _clickTrace.removeAt(_clickTrace.length - 1);
       } else if (lastButtonId == '' || !thisButton.enabled) {
         thisButton.enabled = true;
-        thisButton.symbol = currentPlayer?.symbol ?? Symbols.noneplay;
+        thisButton.symbol = currentPlayer.symbol;
         haveRepent = false;
         _checkWinner();
-        nextPlayer = currentPlayer?.name == widget.player1.name
+        nextPlayer = currentPlayer.name == widget.player1.name
             ? widget.player2
             : widget.player1;
         _clickTrace.add(thisButton.id);
@@ -227,10 +264,12 @@ class _TicTacToePageState extends State<TicTacToePage> {
       showDialog(
           context: context,
           builder: (context) {
-            return AlertDialog(content: Text('${currentGammer?.name} WIN!'),);
+            return AlertDialog(
+              content: Text('${currentGammer?.name} WIN!'),
+            );
           });
 
-      _initializeState();
+      _clickStartGame();
     }
   }
 
