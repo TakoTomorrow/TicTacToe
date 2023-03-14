@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const TicTacToe());
-}
+/// Run App
+void main() => runApp(const TicTacToe());
 
 class TicTacToe extends StatelessWidget {
   const TicTacToe({super.key});
@@ -10,35 +10,122 @@ class TicTacToe extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Tic Tac Toe',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return ChangeNotifierProvider(
+      create: (context) => TicTacToeState(),
+      child: MaterialApp(
+        title: 'Tic Tac Toe',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: const HomePage(),
+        routes: {
+          '/tictactoe': (_) {
+            // 從ＭodalRoute 提取參數
+            var arguments = ModalRoute.of(_)?.settings.arguments as Map;
+
+            var player1 = Player(
+              name: arguments['player1'],
+              symbol: Symbols.player1,
+            );
+            var player2 = Player(
+              name: arguments['player2'],
+              symbol: Symbols.player2,
+            );
+
+            return TicTacToePage(
+              title: 'Tic Tac Toe Page',
+              player1: player1,
+              player2: player2,
+            );
+          },
+        },
       ),
-      home: const TicTacToePage(title: 'Tic Tac Toe Page'),
+    );
+  }
+}
+
+class TicTacToeState extends ChangeNotifier {
+  TextEditingController player1Controller = TextEditingController();
+
+  TextEditingController player2Controller = TextEditingController();
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    var state = context.watch<TicTacToeState>();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Regist Player'),
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: Center(
+                child: TextField(
+              controller: state.player1Controller,
+            )),
+          ),
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: Center(
+                child: TextField(
+              controller: state.player2Controller,
+            )),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (state.player1Controller.text == '') return;
+              if (state.player2Controller.text == '') return;
+
+              var players = {
+                'player1': state.player1Controller.text,
+                'player2': state.player2Controller.text,
+              };
+
+              Navigator.of(context).pushNamed('/tictactoe', arguments: players);
+            },
+            child: const Text('Start Game'),
+          )
+        ],
+      ),
     );
   }
 }
 
 class TicTacToePage extends StatefulWidget {
-  const TicTacToePage({super.key, required this.title});
   final String title;
+
+  final Player player1;
+
+  final Player player2;
+
+  const TicTacToePage(
+      {super.key,
+      required this.title,
+      required this.player1,
+      required this.player2});
 
   @override
   State<TicTacToePage> createState() => _TicTacToePageState();
 }
 
 class _TicTacToePageState extends State<TicTacToePage> {
-  String nextGammer = 'O';
-
-  bool haveRepent = false;
-  
-  List<String> clickTrace = [''];
-
   List<GameButton> buttons = GameButton.getGameButtons(9);
 
-  String get currentButtonId {
-    return clickTrace.last;
+  bool haveRepent = false;
+
+  List<String> _clickTrace = [''];
+
+  Player? nextPlayer;
+
+  String get lastButtonId {
+    return _clickTrace.last;
   }
 
   @override
@@ -71,48 +158,78 @@ class _TicTacToePageState extends State<TicTacToePage> {
 
   void _initializeState() {
     buttons = GameButton.getGameButtons(9);
-    clickTrace = [''];
-    nextGammer = 'O';
+    _clickTrace = [''];
+    nextPlayer = widget.player1;
   }
 
-  void _clickGameButton(GameButton thisButton) => setState(() {
-        var currentGammer = nextGammer;
+  void _clickGameButton(GameButton thisButton) {
+    setState(() {
+      var currentPlayer = nextPlayer;
 
-        if (currentButtonId == '' || !thisButton.enabled) {
-          thisButton.enabled = !thisButton.enabled;
-          thisButton.text = currentGammer;
-          haveRepent = false;
-          _checkWinner();
-          nextGammer = currentGammer == 'O' ? 'X' : 'O';
-          clickTrace.add(thisButton.id);
-        } else if (thisButton.id == currentButtonId && !haveRepent) {
-          thisButton.enabled = !thisButton.enabled;
-          haveRepent = true;
-          nextGammer = thisButton.text = currentGammer == 'O' ? 'X' : 'O';
-          clickTrace.removeAt(clickTrace.length - 1);
-        }
-      });
+      if (thisButton.id == lastButtonId && !haveRepent) {
+        thisButton.enabled = false;
+        thisButton.symbol = Symbols.noneplay;
+        haveRepent = true;
+        nextPlayer = currentPlayer?.name == widget.player1.name
+            ? widget.player2
+            : widget.player1;
+        _clickTrace.removeAt(_clickTrace.length - 1);
+      } else if (lastButtonId == '' || !thisButton.enabled) {
+        thisButton.enabled = true;
+        thisButton.symbol = currentPlayer?.symbol ?? Symbols.noneplay;
+        haveRepent = false;
+        _checkWinner();
+        nextPlayer = currentPlayer?.name == widget.player1.name
+            ? widget.player2
+            : widget.player1;
+        _clickTrace.add(thisButton.id);
+      }
+    });
+  }
 
   void _checkWinner() {
-    var currentGammer = nextGammer;
+    var currentGammer = nextPlayer;
     var isOver = false;
 
-    if (buttons[0].text == currentGammer && buttons[0].text == buttons[1].text && buttons[1].text == buttons[2].text) isOver = true;
-    else if (buttons[3].text == currentGammer && buttons[3].text == buttons[4].text && buttons[4].text == buttons[5].text) isOver = true;
-    else if (buttons[6].text == currentGammer && buttons[6].text == buttons[7].text && buttons[7].text == buttons[8].text) isOver = true;
-    else if (buttons[0].text == currentGammer && buttons[0].text == buttons[3].text && buttons[3].text == buttons[6].text) isOver = true;
-    else if (buttons[1].text == currentGammer && buttons[1].text == buttons[4].text && buttons[4].text == buttons[7].text) isOver = true;
-    else if (buttons[2].text == currentGammer && buttons[2].text == buttons[5].text && buttons[5].text == buttons[8].text) isOver = true;
-    else if (buttons[0].text == currentGammer && buttons[0].text == buttons[4].text && buttons[4].text == buttons[8].text) isOver = true;
-    else if (buttons[2].text == currentGammer && buttons[2].text == buttons[4].text && buttons[4].text == buttons[6].text) isOver = true;
+    if (buttons[0].symbol == currentGammer?.symbol &&
+        buttons[0].symbol == buttons[1].symbol &&
+        buttons[1].symbol == buttons[2].symbol)
+      isOver = true;
+    else if (buttons[3].symbol == currentGammer?.symbol &&
+        buttons[3].symbol == buttons[4].symbol &&
+        buttons[4].symbol == buttons[5].symbol)
+      isOver = true;
+    else if (buttons[6].symbol == currentGammer?.symbol &&
+        buttons[6].symbol == buttons[7].symbol &&
+        buttons[7].symbol == buttons[8].symbol)
+      isOver = true;
+    else if (buttons[0].symbol == currentGammer?.symbol &&
+        buttons[0].symbol == buttons[3].symbol &&
+        buttons[3].symbol == buttons[6].symbol)
+      isOver = true;
+    else if (buttons[1].symbol == currentGammer?.symbol &&
+        buttons[1].symbol == buttons[4].symbol &&
+        buttons[4].symbol == buttons[7].symbol)
+      isOver = true;
+    else if (buttons[2].symbol == currentGammer?.symbol &&
+        buttons[2].symbol == buttons[5].symbol &&
+        buttons[5].symbol == buttons[8].symbol)
+      isOver = true;
+    else if (buttons[0].symbol == currentGammer?.symbol &&
+        buttons[0].symbol == buttons[4].symbol &&
+        buttons[4].symbol == buttons[8].symbol)
+      isOver = true;
+    else if (buttons[2].symbol == currentGammer?.symbol &&
+        buttons[2].symbol == buttons[4].symbol &&
+        buttons[4].symbol == buttons[6].symbol) isOver = true;
 
-    if(isOver){
+    if (isOver) {
       showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(content: Text('$currentGammer WIN!'));
-            });
-      
+          context: context,
+          builder: (context) {
+            return AlertDialog(content: Text('${currentGammer?.name} WIN!'),);
+          });
+
       _initializeState();
     }
   }
@@ -132,7 +249,7 @@ class _TicTacToePageState extends State<TicTacToePage> {
         ),
         onPressed: () => _clickGameButton(thisButton),
         child: Text(
-          thisButton.enabled ? thisButton.text : "",
+          thisButton.enabled ? thisButton.symbol.symbol : "",
           style: const TextStyle(
             fontSize: 50.0,
             color: Colors.white,
@@ -143,18 +260,36 @@ class _TicTacToePageState extends State<TicTacToePage> {
   }
 }
 
+/// 遊戲按鈕
 class GameButton {
   final id;
-  String text;
+
+  /// 按鈕顯示子字串
+  Symbols symbol;
+
   bool enabled;
 
-  GameButton({this.id, this.text = '', this.enabled = false});
+  GameButton({this.id, this.symbol = Symbols.noneplay, this.enabled = false});
 
-  static List<GameButton> getGameButtons(int count) {
-    var result = <GameButton>[];
-    for (int index = 1; index <= count; index++) {
-      result.add(GameButton(id: 'button${index.toString()}'));
-    }
-    return result;
-  }
+  /// 取得遊戲按鈕清單
+  static List<GameButton> getGameButtons(int count) =>
+      List.generate(9, (index) => GameButton(id: 'button${index.toString()}'));
+}
+
+class Player {
+  final String name;
+
+  final Symbols symbol;
+
+  const Player({required this.name, required this.symbol});
+}
+
+enum Symbols {
+  noneplay(''),
+  player1('O'),
+  player2('X');
+
+  final String symbol;
+
+  const Symbols(this.symbol);
 }
