@@ -57,7 +57,7 @@ class _TicTacToePageState extends State<TicTacToePage> {
             height: 20,
           ),
           Row(
-            mainAxisSize: MainAxisSize.min,
+            //mainAxisSize: MainAxisSize.min,
             children: [
               Expanded(
                 flex: 5,
@@ -111,6 +111,7 @@ class _TicTacToePageState extends State<TicTacToePage> {
                 crossAxisCount: 3,
                 children: _getTextButtons(9),
               ),
+              const SizedBox(height: 20,),
               Center(
                 child: ElevatedButton(
                   onPressed: () => _restartGame(),
@@ -169,39 +170,7 @@ class _TicTacToePageState extends State<TicTacToePage> {
   /// 確認遊戲是否結束
   bool _checkGameOver() {
     var currentGammer = nextPlayer;
-    var isOver = false;
-
-    if (buttons[0].symbol == currentGammer?.symbol &&
-        buttons[0].symbol == buttons[1].symbol &&
-        buttons[1].symbol == buttons[2].symbol)
-      isOver = true;
-    else if (buttons[3].symbol == currentGammer?.symbol &&
-        buttons[3].symbol == buttons[4].symbol &&
-        buttons[4].symbol == buttons[5].symbol)
-      isOver = true;
-    else if (buttons[6].symbol == currentGammer?.symbol &&
-        buttons[6].symbol == buttons[7].symbol &&
-        buttons[7].symbol == buttons[8].symbol)
-      isOver = true;
-    else if (buttons[0].symbol == currentGammer?.symbol &&
-        buttons[0].symbol == buttons[3].symbol &&
-        buttons[3].symbol == buttons[6].symbol)
-      isOver = true;
-    else if (buttons[1].symbol == currentGammer?.symbol &&
-        buttons[1].symbol == buttons[4].symbol &&
-        buttons[4].symbol == buttons[7].symbol)
-      isOver = true;
-    else if (buttons[2].symbol == currentGammer?.symbol &&
-        buttons[2].symbol == buttons[5].symbol &&
-        buttons[5].symbol == buttons[8].symbol)
-      isOver = true;
-    else if (buttons[0].symbol == currentGammer?.symbol &&
-        buttons[0].symbol == buttons[4].symbol &&
-        buttons[4].symbol == buttons[8].symbol)
-      isOver = true;
-    else if (buttons[2].symbol == currentGammer?.symbol &&
-        buttons[2].symbol == buttons[4].symbol &&
-        buttons[4].symbol == buttons[6].symbol) isOver = true;
+    var isOver = _haveWinner();
 
     // 分出勝負
     if (isOver) {
@@ -223,6 +192,47 @@ class _TicTacToePageState extends State<TicTacToePage> {
     }
 
     // 遊戲繼續
+    return false;
+  }
+
+  /// 確認是否出現遊戲贏家
+  bool _haveWinner() {
+    var currentGammer = nextPlayer;
+
+    if (buttons[0].symbol == currentGammer?.symbol &&
+        buttons[0].symbol == buttons[1].symbol &&
+        buttons[1].symbol == buttons[2].symbol) {
+      return true;
+    } else if (buttons[3].symbol == currentGammer?.symbol &&
+        buttons[3].symbol == buttons[4].symbol &&
+        buttons[4].symbol == buttons[5].symbol) {
+      return true;
+    } else if (buttons[6].symbol == currentGammer?.symbol &&
+        buttons[6].symbol == buttons[7].symbol &&
+        buttons[7].symbol == buttons[8].symbol) {
+      return true;
+    } else if (buttons[0].symbol == currentGammer?.symbol &&
+        buttons[0].symbol == buttons[3].symbol &&
+        buttons[3].symbol == buttons[6].symbol) {
+      return true;
+    } else if (buttons[1].symbol == currentGammer?.symbol &&
+        buttons[1].symbol == buttons[4].symbol &&
+        buttons[4].symbol == buttons[7].symbol) {
+      return true;
+    } else if (buttons[2].symbol == currentGammer?.symbol &&
+        buttons[2].symbol == buttons[5].symbol &&
+        buttons[5].symbol == buttons[8].symbol) {
+      return true;
+    } else if (buttons[0].symbol == currentGammer?.symbol &&
+        buttons[0].symbol == buttons[4].symbol &&
+        buttons[4].symbol == buttons[8].symbol) {
+      return true;
+    } else if (buttons[2].symbol == currentGammer?.symbol &&
+        buttons[2].symbol == buttons[4].symbol &&
+        buttons[4].symbol == buttons[6].symbol) {
+      return true;
+    }
+
     return false;
   }
 
