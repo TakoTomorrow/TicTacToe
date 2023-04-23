@@ -17,6 +17,7 @@ class Startup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
+      
       create: (context) => GlobalState(),
       child: MaterialApp(
         title: 'Tic Tac Toe',

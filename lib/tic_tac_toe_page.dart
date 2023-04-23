@@ -48,6 +48,11 @@ class _TicTacToePageState extends State<TicTacToePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: Drawer(
+        child: Column(
+          children: [],
+        ),
+      ),
       appBar: AppBar(
         title: Text(widget.title),
       ),
